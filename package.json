@@ -1,0 +1,277 @@
+{
+  "name": "kdk-devinsights",
+  "displayName": "KDK DevInsights",
+  "description": "Enterprise AI coding assistant telemetry, ticket association, and ROI analytics for GitHub Copilot",
+  "version": "1.0.0",
+  "publisher": "Kodiak LLC",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Data Science",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "copilot",
+    "telemetry",
+    "analytics",
+    "productivity",
+    "enterprise"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "kdkDevInsights.openDashboard",
+        "title": "KDK: Open DevInsights Dashboard",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "kdkDevInsights.associateTicket",
+        "title": "KDK: Associate Ticket / User Story"
+      },
+      {
+        "command": "kdkDevInsights.clearTicket",
+        "title": "KDK: Clear Active Ticket Association"
+      },
+      {
+        "command": "kdkDevInsights.viewSessionSummary",
+        "title": "KDK: View Current Session Summary"
+      },
+      {
+        "command": "kdkDevInsights.exportTelemetry",
+        "title": "KDK: Export Telemetry Data"
+      },
+      {
+        "command": "kdkDevInsights.pauseTracking",
+        "title": "KDK: Pause Telemetry Tracking"
+      },
+      {
+        "command": "kdkDevInsights.resumeTracking",
+        "title": "KDK: Resume Telemetry Tracking"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "kdk-devinsights",
+          "title": "KDK DevInsights",
+          "icon": "media/kdk-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "kdk-devinsights": [
+        {
+          "id": "kdkDevInsights.activeSession",
+          "name": "Active Session"
+        },
+        {
+          "id": "kdkDevInsights.recentMetrics",
+          "name": "Recent Metrics"
+        },
+        {
+          "id": "kdkDevInsights.ticketAssociation",
+          "name": "Ticket Association"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "KDK DevInsights",
+      "properties": {
+        "kdkDevInsights.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable telemetry collection"
+        },
+        "kdkDevInsights.telemetryEndpoint": {
+          "type": "string",
+          "default": "",
+          "description": "URL of the enterprise telemetry ingestion endpoint (e.g., https://telemetry.yourcompany.com/api/v1/events)"
+        },
+        "kdkDevInsights.telemetryApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for authenticating with the telemetry endpoint"
+        },
+        "kdkDevInsights.flushIntervalSeconds": {
+          "type": "number",
+          "default": 30,
+          "description": "How often (in seconds) to flush batched telemetry events to the endpoint"
+        },
+        "kdkDevInsights.maxBatchSize": {
+          "type": "number",
+          "default": 100,
+          "description": "Maximum number of events to batch before forcing a flush"
+        },
+        "kdkDevInsights.ticketPatterns": {
+          "type": "array",
+          "default": [
+            "([A-Z]{2,10}-\\d+)",
+            "(US\\d+)",
+            "(DE\\d+)",
+            "(BUG\\d+)",
+            "(STORY-\\d+)"
+          ],
+          "description": "Regex patterns to extract ticket/story IDs from branch names and commit messages"
+        },
+        "kdkDevInsights.ticketProvider": {
+          "type": "string",
+          "enum": [
+            "jira",
+            "azure-devops",
+            "github-issues",
+            "rally",
+            "custom"
+          ],
+          "default": "jira",
+          "description": "Work item tracking provider for enriching ticket metadata"
+        },
+        "kdkDevInsights.ticketProviderBaseUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Base URL for the ticket provider (e.g., https://jira.yourcompany.com)"
+        },
+        "kdkDevInsights.trackCopilotCompletions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Track GitHub Copilot inline completion accept/dismiss events"
+        },
+        "kdkDevInsights.trackCopilotChat": {
+          "type": "boolean",
+          "default": true,
+          "description": "Track GitHub Copilot Chat interactions (prompt count, response times, etc.)"
+        },
+        "kdkDevInsights.trackEditorActivity": {
+          "type": "boolean",
+          "default": true,
+          "description": "Track editor activity (active file, language, edit velocity)"
+        },
+        "kdkDevInsights.trackGitOperations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Track git operations (commits, branch switches, PRs)"
+        },
+        "kdkDevInsights.anonymizeUserData": {
+          "type": "boolean",
+          "default": false,
+          "description": "Hash usernames and email addresses before sending telemetry"
+        },
+        "kdkDevInsights.localStoragePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path for local telemetry storage (offline mode). Leave empty to use extension storage."
+        },
+        "kdkDevInsights.includeCodeSnippets": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include accepted code snippets in telemetry (may contain sensitive code; disabled by default)"
+        },
+        "kdkDevInsights.idleTimeoutMinutes": {
+          "type": "number",
+          "default": 5,
+          "description": "Minutes of inactivity before session is considered idle"
+        },
+        "kdkDevInsights.enterpriseId": {
+          "type": "string",
+          "default": "",
+          "description": "Enterprise/organization identifier for multi-tenant telemetry backends"
+        },
+        "kdkDevInsights.teamId": {
+          "type": "string",
+          "default": "",
+          "description": "Team identifier for grouping metrics"
+        },
+        "kdkDevInsights.gheHost": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub Enterprise hostname for telemetry push (e.g., github.mycompany.com)"
+        },
+        "kdkDevInsights.gheRepo": {
+          "type": "string",
+          "default": "",
+          "description": "Target repository on GHE for telemetry data in OWNER/REPO format (e.g., my-org/devinsights-telemetry)"
+        },
+        "kdkDevInsights.gheBranch": {
+          "type": "string",
+          "default": "main",
+          "description": "Branch to push telemetry data to"
+        },
+        "kdkDevInsights.gheTelemetryDir": {
+          "type": "string",
+          "default": "telemetry",
+          "description": "Directory within the GHE repo to store telemetry JSON files"
+        }
+      }
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "kdkDevInsights.openDashboard",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "kdkDevInsights.openDashboard"
+        },
+        {
+          "command": "kdkDevInsights.associateTicket"
+        },
+        {
+          "command": "kdkDevInsights.clearTicket"
+        },
+        {
+          "command": "kdkDevInsights.viewSessionSummary"
+        },
+        {
+          "command": "kdkDevInsights.exportTelemetry"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "kdkDevInsights.openDashboard",
+        "key": "ctrl+shift+k ctrl+shift+d",
+        "mac": "cmd+shift+k cmd+shift+d"
+      },
+      {
+        "command": "kdkDevInsights.associateTicket",
+        "key": "ctrl+shift+k ctrl+shift+t",
+        "mac": "cmd+shift+k cmd+shift+t"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "npm run build:extension && npm run build:webview",
+    "build:extension": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
+    "build:webview": "esbuild ./webview-ui/src/index.tsx --bundle --outfile=dist/webview.js --format=esm --sourcemap",
+    "watch": "concurrently \"npm run watch:extension\" \"npm run watch:webview\"",
+    "watch:extension": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap --watch",
+    "watch:webview": "esbuild ./webview-ui/src/index.tsx --bundle --outfile=dist/webview.js --format=esm --sourcemap --watch",
+    "lint": "eslint src --ext ts",
+    "test": "jest --config jest.config.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.19.12",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "uuid": "^9.0.0"
+  }
+}
